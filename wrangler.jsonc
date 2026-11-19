@@ -3,5 +3,13 @@
   "name": "quotepilot-test",
   "main": "src/worker.js",
   "compatibility_date": "2026-11-19",
-  "workers_dev": true
+  "workers_dev": true,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "quotepilot-test-db",
+      "database_id": "b5916ca8-53e2-4cd9-b0c5-510863418993",
+      "migrations_dir": "migrations"
+    }
+  ]
 }
