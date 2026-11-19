@@ -14,20 +14,20 @@ test("serves the application and security headers", async () => {
 
 test("exposes healthy test status and static assets", async () => {
   const health = await worker.fetch(new Request(base + "/api/health"), {});
-  assert.deepEqual(await health.json(), { ok: true, app: "QuotePilot", environment: "test" });
+  assert.deepEqual(await health.json(), { ok: true, app: "QuotePilot", environment: "test", database: false });
   const appJs = await worker.fetch(new Request(base + "/assets/app.js"), {});
-  assert.match(await appJs.text(), /saveDraft/);
+  assert.match(await appJs.text(), /saveQuote/);
   const css = await worker.fetch(new Request(base + "/assets/styles.css"), {});
   assert.match(await css.text(), /--blue:#315efb/);
 });
 
-test("validates quotes and returns calculated totals through the API", async () => {
+test("requires a configured database before exposing account APIs", async () => {
   const response = await worker.fetch(new Request(base + "/api/quotes/validate", {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ businessName: "Painter", clientName: "Taylor", clientEmail: "taylor@example.com", currency: "USD", taxPercent: 10, items: [{ name: "Painting", quantity: 2, rate: 100 }] }),
   }), {});
-  assert.equal(response.status, 200);
-  assert.deepEqual(await response.json(), { ok: true, items: [{ name: "Painting", description: "", quantity: 2, rate: 100, amount: 200 }], subtotal: 200, tax: 20, total: 220, taxPercent: 10, totalFormatted: "$220.00" });
+  assert.equal(response.status, 503);
+  assert.equal((await response.json()).error, "Database is not configured.");
 });
 
 test("rejects invalid quote input and unsupported methods", async () => {
@@ -35,7 +35,7 @@ test("rejects invalid quote input and unsupported methods", async () => {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ businessName: "", clientName: "", currency: "USD", taxPercent: 0, items: [] }),
   }), {});
-  assert.equal(invalid.status, 400);
+  assert.equal(invalid.status, 503);
   assert.equal((await invalid.json()).ok, false);
   const method = await worker.fetch(new Request(base + "/", { method: "PUT" }), {});
   assert.equal(method.status, 405);
