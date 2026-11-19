@@ -3,7 +3,7 @@
 Early interactive QuotePilot prototype, served from Cloudflare Workers.
 
 ## Test URL
-https://quotepilot-test.workers.dev
+https://quotepilot-test.jamesrae-rosario18.workers.dev
 
 ## Current scope
 - Live quote / estimate preview
