@@ -1,29 +1,39 @@
 # QuotePilot
 
-A lightweight QuotePilot quote builder prototype deployed to Cloudflare Workers.
+QuotePilot is a quote builder test environment deployed on Cloudflare Workers with Cloudflare D1 persistence.
 
 ## Test workspace
+
 https://quotepilot-test.jamesrae-rosario18.workers.dev
 
-## Current features
-- Live quote preview with multiple line items
-- USD, GBP, CAD, and AUD
-- Tax calculation and input validation
-- Save, reopen, and delete drafts
-- Print or save the preview as PDF
-- Responsive layout and basic security headers
+## Features
 
-Drafts are stored in local browser storage. Use sample data only: this test version has no login, shared database, AI generation, email delivery, or payment processing.
+- Live quote preview, line items, tax, and USD/GBP/CAD/AUD currencies
+- Email and password registration and sign in
+- Private workspace per account
+- Server-side quote persistence, reopen, and delete
+- Print or save as PDF
+- Secure session cookies, salted PBKDF2 password hashes, input bounds, origin checks, and response security headers
+- Link to the shared QueueDrop test support portal
+
+This is a test environment. Use sample data only. AI generation, email delivery, client quote links, and payments are not connected. The shared Support link opens the QueueDrop test portal; QuotePilot account single sign-on has not yet been added.
+
+## Database
+
+The `quotepilot-test-db` D1 database is in APAC. The initial schema is in `migrations/0001_initial.sql`. Apply schema changes with `npx wrangler d1 migrations apply quotepilot-test-db --remote`.
 
 ## Project structure
-- `src/worker.js` — HTTP routes and response security headers
-- `src/domain/` — quote calculations, validation, and currency formatting
+
+- `src/worker.js` — HTTP routes, auth, quote persistence, and security headers
+- `src/domain/` — quote calculations and currency formatting
 - `src/ui/` — page shell, styles, and browser application
 - `scripts/build.mjs` — packages the browser client for Worker delivery
-- `test/` — domain and Worker route tests
+- `migrations/` — D1 database schema
+- `test/` — unit and Worker route tests
 - `.github/workflows/quality.yml` — automated build, syntax, and test checks
 
-## Local quality checks
+## Quality checks
+
 Requires Node.js 20 or later.
 
 ```sh
@@ -32,5 +42,6 @@ npm run check
 npm test
 ```
 
-## Cloudflare deploy
-The test Worker is named `quotepilot-test`. Deploy it with Wrangler after configuring Cloudflare credentials for the repository environment.
+## Deployment
+
+The test Worker is `quotepilot-test`. With Cloudflare credentials configured, deploy using `npx wrangler deploy`.
