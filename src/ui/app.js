@@ -23,6 +23,17 @@ function authView(mode="login", error="") {
     catch(error){ $("authError").textContent=error.message; $("authError").classList.add("error"); button.disabled=false; }
   };
 }
+async function generateDraft() {
+  const button=$("generateBtn"), status=$("aiStatus"), prompt=$("aiPrompt").value.trim();
+  if(prompt.length<10){status.textContent="Describe the work in at least 10 characters.";status.classList.add("error");return;}
+  button.disabled=true;status.classList.remove("error");status.textContent="Generating a draft…";
+  try {
+    const result=await api("/api/quotes/generate",{method:"POST",body:JSON.stringify({prompt})});
+    items=result.items;renderItems();renderPreview();
+    status.textContent="AI draft ready. Check each line and rate before saving.";
+  } catch(error) { status.textContent=error.message;status.classList.add("error"); }
+  finally { button.disabled=false; }
+}
 function readQuote() { return { businessName:$ ("business").value.trim(), businessEmail:$ ("businessEmail").value.trim(), validUntil:$ ("valid").value, clientName:$ ("client").value.trim(), clientEmail:$ ("clientEmail").value.trim(), currency:$ ("currency").value, taxPercent:Number($("taxPercent").value), paymentTerms:$ ("terms").value.trim(), items:items.map(x=>({name:x.name,description:x.description,quantity:Number(x.quantity),rate:Number(x.rate)})) }; }
 function showStatus(message,error=false) { $("status").textContent=message; $("status").classList.toggle("error",error); }
 function renderItems() {
@@ -51,7 +62,7 @@ async function showWorkspace() { $("authView").hidden=true;$("workspaceView").hi
 async function initialize() {
   $("logoutBtn").onclick=async()=>{await api("/api/auth/logout",{method:"POST"});currentUser=null;authView("login");};
   $("addItemBtn").onclick=()=>{items.push({name:"",description:"",quantity:1,rate:0});renderItems();renderPreview();};
-  $("saveBtn").onclick=saveQuote; $("newBtn").onclick=newQuote; $("printBtn").onclick=()=>window.print();
+  $("saveBtn").onclick=saveQuote; $("generateBtn").onclick=generateDraft; $("newBtn").onclick=newQuote; $("printBtn").onclick=()=>window.print();
   formIds.forEach(id=>$(id).addEventListener("input",renderPreview));
   try { const data=await api("/api/auth/me");currentUser=data.user;await showWorkspace(); } catch { authView("login"); }
 }
