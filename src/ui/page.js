@@ -12,7 +12,7 @@ export function renderPage() {
 <title>QuotePilot — Test workspace</title><link rel="stylesheet" href="/assets/styles.css">
 </head>
 <body>
-<div id="authView" class="auth-wrap" hidden></div>
+<div id="authView" class="auth-wrap"><div class="auth-card"><div class="brand"><div class="logo">Q</div>QuotePilot <span class="tag">TEST</span></div><h1>Loading your test workspace…</h1><p class="subtitle">Checking your sign-in and loading your saved quotes.</p><div class="auth-foot">Please wait a moment. Your sign-in screen will appear automatically.</div></div></div>
 <div id="workspaceView" hidden>
 <header class="top"><div class="brand"><div class="logo">Q</div>QuotePilot <span class="tag">TEST</span></div><div class="topright"><a class="btn" href="https://support-test.getqueuedrop.com/?product=QuotePilot" target="_blank" rel="noopener noreferrer">Support</a><span id="userEmail" class="user"></span><button class="btn" id="logoutBtn" type="button">Sign out</button></div></header>
 <div class="layout"><aside><div class="navlabel">WORKSPACE</div><div class="nav active">▦ &nbsp; Quotes</div><div class="aside-note"><strong>Private test workspace</strong>Quotes are saved to your account. Use sample data only in this test environment.</div><div class="aside-note"><strong>Shared support portal</strong>Open the QueueDrop support portal to contact support.</div></aside>
