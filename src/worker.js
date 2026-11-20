@@ -84,6 +84,37 @@ export default {
       const user = await session(request,env);
       if (path === "/api/auth/me" && request.method === "GET") return user ? json({ok:true,user:{email:user.email,workspaceName:user.workspace_name}}) : json({ok:false},401);
       if (!user) return json({ok:false,error:"Please sign in to continue."},401);
+      if (path === "/api/quotes/generate" && request.method === "POST") {
+        if (!env.AI) return json({ ok: false, error: "AI draft generation is not configured." }, 503);
+        const data = await body(request);
+        const prompt = String(data.prompt || "").trim();
+        if (prompt.length < 10 || prompt.length > 2000) return json({ ok: false, error: "Describe the work in 10 to 2,000 characters." }, 400);
+        let generated;
+        try {
+          generated = await env.AI.run("@cf/meta/llama-3.2-3b-instruct", {
+            messages: [
+              { role: "system", content: "Create a concise service quote draft from the user's description. Return only a JSON object with an items array; each item has name, description, quantity, and rate. Do not invent prices: use rate 0 unless the user explicitly gives a price. If quantity is not specified, use 1. Keep descriptions factual, concise, and based only on the request. Do not include customer names, business details, tax, currency, or payment terms." },
+              { role: "user", content: prompt }
+            ],
+            response_format: { type: "json_object" },
+            max_tokens: 500,
+            temperature: 0.2
+          });
+        } catch {
+          return json({ ok: false, error: "AI draft generation is temporarily unavailable. Please try again." }, 503);
+        }
+        let draft = generated?.response ?? generated?.choices?.[0]?.message?.content;
+        try { if (typeof draft === "string") draft = JSON.parse(draft); } catch { return json({ ok: false, error: "AI returned an invalid draft. Please try again." }, 502); }
+        if (!Array.isArray(draft?.items) || draft.items.length < 1 || draft.items.length > 20) return json({ ok: false, error: "AI returned an invalid draft. Please try again." }, 502);
+        const items = draft.items.map(item => ({
+          name: String(item?.name || "").trim().slice(0, 120),
+          description: String(item?.description || "").trim().slice(0, 300),
+          quantity: Number(item?.quantity),
+          rate: Number(item?.rate)
+        }));
+        if (items.some(item => !item.name || !Number.isFinite(item.quantity) || item.quantity <= 0 || item.quantity > 100000 || !Number.isFinite(item.rate) || item.rate < 0 || item.rate > 1000000000)) return json({ ok: false, error: "AI returned an invalid draft. Please try again." }, 502);
+        return json({ ok: true, items });
+      }
       if (path === "/api/quotes" && request.method === "GET") return json(await rpc(env,"list_quotes",{p_token_hash:user.token_hash,p_now:now()}));
       if (path === "/api/quotes" && request.method === "POST") return await saveQuote(request,env,user);
       const match=path.match(/^\/api\/quotes\/([0-9a-f-]{36})$/i);
